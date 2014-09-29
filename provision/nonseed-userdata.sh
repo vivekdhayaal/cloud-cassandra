@@ -261,7 +261,7 @@ seed_provider:
     - class_name: org.apache.cassandra.locator.SimpleSeedProvider
       parameters:
           # seeds is actually a comma-delimited list of addresses.
-          - seeds: \"__SEED_IP__\"
+          - seeds: \"19.0.0.125\"
 
 # For workloads with more data than can fit in memory, Cassandra's
 # bottleneck will be reads that need to fetch data from
@@ -752,7 +752,6 @@ inter_dc_tcp_nodelay: false
 EOF
 "
 
-sudo sed -i s/__SEED_IP__/$SELF_IP/g /etc/cassandra/cassandra.yaml
 sudo sed -i s/__SELF_IP__/$SELF_IP/g /etc/cassandra/cassandra.yaml
 
 sudo service cassandra start
