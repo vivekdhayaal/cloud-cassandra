@@ -52,19 +52,7 @@ resources:
       network_id: { get_param: net_id }
       fixed_ips:
         - subnet_id: { get_param: subnet_id }
-      security_groups: [{ get_resource: server_security_group }]
-
-  server_security_group:
-    type: OS::Neutron::SecurityGroup
-    properties:
-      name: cassandra-secgroup
-      rules: [
-        {remote_ip_prefix: 0.0.0.0/0,
-        protocol: tcp,
-        port_range_min: 22,
-        port_range_max: 22},
-        {remote_ip_prefix: 0.0.0.0/0,
-        protocol: icmp}]
+      security_groups: [default]
 
 outputs:
     server_networks:
