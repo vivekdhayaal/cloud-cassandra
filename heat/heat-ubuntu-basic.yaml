@@ -20,6 +20,9 @@ parameters:
     default: cassandra
     constraints:
       - custom_constraint: glance.image
+  admin_user:
+    type: string
+    default: ubuntu
 
 resources:
   server:
@@ -28,6 +31,7 @@ resources:
       image: { get_param: image }
       flavor: { get_param: flavor }
       key_name: { get_param: key_name }
+      admin_user: { get_param: admin_user }
       user_data: |
           echo "done" >> /tmp/status.txt
 
