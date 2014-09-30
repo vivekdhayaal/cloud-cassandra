@@ -17,12 +17,21 @@ parameters:
   image:
     type: string
     description: Image ID or image name to use for the server
-    default: cassandra
+    default: datastax-cassandra
     constraints:
       - custom_constraint: glance.image
   admin_user:
     type: string
     default: ubuntu
+  net_id:
+    type: string
+    default: 96ff1d4f-5777-429d-8547-16d724b911ae
+    description: ID of Neutron network into which servers get deployed
+  subnet_id:
+    type: string
+    default: cf4507e2-197e-478b-86a8-244ecf7c851f
+    description: ID of Neutron sub network into which servers get deployed
+
 
 resources:
   server:
@@ -34,6 +43,28 @@ resources:
       admin_user: { get_param: admin_user }
       user_data: |
           echo "done" >> /tmp/status.txt
+      networks:
+        - port: { get_resource: server_port }
+
+  server_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: net_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_resource: server_security_group }]
+
+  server_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: cassandra-secgroup
+      rules: [
+        {remote_ip_prefix: 0.0.0.0/0,
+        protocol: tcp,
+        port_range_min: 22,
+        port_range_max: 22},
+        {remote_ip_prefix: 0.0.0.0/0,
+        protocol: icmp}]
 
 outputs:
     server_networks:
