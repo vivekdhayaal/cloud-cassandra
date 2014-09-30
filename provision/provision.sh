@@ -34,11 +34,14 @@ sleep 90
 
 # Update nonseed-userdata.sh
 SEED_IP=$(nova list  | grep $RAND_INT | awk '{print $(NF-1)}' | cut -d'=' -f2)
-sed -i s/__SEED_IP__/$SEED_IP/g nonseed-userdata.sh
+cp nonseed-userdata.sh nonseed-userdata-$RAND_INT.sh
+sed -i s/__SEED_IP__/$SEED_IP/g nonseed-userdata-$RAND_INT.sh
 
 for i in $(seq 1 $NONSEED_NODES); do
     nova boot --image $IMG_ID --flavor $NODE_FLAVOR --key-name \
         rushi --nic net-id=96ff1d4f-5777-429d-8547-16d724b911ae \
-        --user-data nonseed-userdata.sh cassandra$RAND_INT-$i | \
+        --user-data nonseed-userdata-$RAND_INT.sh cassandra$RAND_INT-$i | \
         grep "^| id " | awk '{print $4}'
 done
+
+rm nonseed-userdata-$RAND_INT.sh
