@@ -1,51 +1,36 @@
 heat_template_version: 2013-05-23
 
 description: >
-  Heat WordPress template to support F20, using only Heat OpenStack-native
-  resource types, and without the requirement for heat-cfntools in the image.
-  WordPress is web software you can use to create a beautiful website or blog.
-  This template installs a single-instance WordPress deployment using a local
-  MySQL database to store the data.
+  Heat template for managing Cassandra nodes in OpenStack cloud
 
 parameters:
-
   key_name:
     type: string
-    description : Name of a KeyPair to enable SSH access to the instance
     default: rushi
-  instance_type:
+    constraints:
+      - custom_constraint: nova.keypair
+  flavor:
     type: string
-    description: Instance type for WordPress server
     default: m1.small
     constraints:
-      - allowed_values: [m1.small, m1.medium, m1.large]
-        description: instance_type must be one of m1.small, m1.medium or m1.large
-  image_id:
+      - custom_constraint: nova.flavor
+  image:
     type: string
-    description: >
-      Name or ID of the image to use for the WordPress server.
-      Recommended values are fedora-20.i386 or fedora-20.x86_64;
-      get them from http://cloud.fedoraproject.org/fedora-20.i386.qcow2
-      or http://cloud.fedoraproject.org/fedora-20.x86_64.qcow2 .
-    default: trusty
-
-  myfirstparam:
-    type: string
-    description: my first param
-    default: statusisallokay
+    description: Image ID or image name to use for the server
+    default: cassandra
+    constraints:
+      - custom_constraint: glance.image
 
 resources:
-  wordpress_instance:
+  server:
     type: OS::Nova::Server
     properties:
-      image: { get_param: image_id }
-      flavor: { get_param: instance_type }
+      image: { get_param: image }
+      flavor: { get_param: flavor }
       key_name: { get_param: key_name }
-      user_data:
-        str_replace:
-          template: |
-            #!/bin/bash -v
-            echo myfirstparam >> /tmp/status.txt
-          params:
-            myfirstparam: { get_param: myfirstparam }
+      user_data: |
+          echo "done" >> /tmp/status.txt
 
+outputs:
+    server_networks:
+        value: { get_attr: [server, networks] }
