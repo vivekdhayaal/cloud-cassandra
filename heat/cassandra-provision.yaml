@@ -41,7 +41,9 @@ resources:
       flavor: { get_param: flavor }
       key_name: { get_param: key_name }
       admin_user: { get_param: admin_user }
+      user_data_format: RAW
       user_data: |
+          #!/bin/bash -v
           echo "done" >> /tmp/status.txt
       networks:
         - port: { get_resource: server_port }
