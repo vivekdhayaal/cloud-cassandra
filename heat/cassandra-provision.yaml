@@ -23,14 +23,9 @@ parameters:
   admin_user:
     type: string
     default: ubuntu
-  net_id:
+  net_name:
     type: string
-    default: 96ff1d4f-5777-429d-8547-16d724b911ae
-    description: ID of Neutron network into which servers get deployed
-  subnet_id:
-    type: string
-    default: cf4507e2-197e-478b-86a8-244ecf7c851f
-    description: ID of Neutron sub network into which servers get deployed
+    default: private-gre
 
 
 resources:
@@ -52,16 +47,7 @@ resources:
           sed -i s/localhost/$SELF_IP/g /etc/cassandra/cassandra.yaml
           service cassandra start
           echo "done" >> /tmp/status.txt
-      networks:
-        - port: { get_resource: server_port }
-
-  server_port:
-    type: OS::Neutron::Port
-    properties:
-      network_id: { get_param: net_id }
-      fixed_ips:
-        - subnet_id: { get_param: subnet_id }
-      security_groups: [default]
+      networks: [{network: {get_param: net_name}}]
 
   my_asg:
     type: OS::Heat::AutoScalingGroup
@@ -79,24 +65,16 @@ resources:
               template: |
                 #!/bin/bash -v
                 # Assumption is cassandra is already installed
+                sleep 180
                 SELF_IP=$(ifconfig eth0 | grep "inet addr:" | cut -d ':' -f2 | cut -d ' ' -f1)
                 service cassandra stop
                 rm -rf /var/lib/cassandra/data/system/*
                 sed -i s/127.0.0.1/seed_ip/g /etc/cassandra/cassandra.yaml
                 sed -i s/localhost/$SELF_IP/g /etc/cassandra/cassandra.yaml
                 service cassandra start
-                echo "done" >> /tmp/status.txt
               params:
-                seed_ip: { get_attr: [server, networks, private, 0]}
-          networks:
-            port:
-              type: OS::Neutron::Port
-              properties:
-                network_id: { get_param: net_id }
-                fixed_ips:
-                  - subnet_id: { get_param: subnet_id }
-                security_groups: [default]
-#            - port: { get_resource: server_port }
+                seed_ip: { get_attr: [server, networks, private-gre, 0]}
+          networks: [{network: {get_param: net_name}}]
       min_size: 1
       desired_capacity: 3
       max_size: 10
