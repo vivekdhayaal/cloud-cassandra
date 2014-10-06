@@ -63,6 +63,60 @@ resources:
         - subnet_id: { get_param: subnet_id }
       security_groups: [default]
 
+  my_asg:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      resource:
+        type: OS::Nova::Server
+        properties:
+          image: { get_param: image }
+          flavor: { get_param: flavor }
+          key_name: { get_param: key_name }
+          admin_user: { get_param: admin_user }
+          user_data_format: RAW
+          user_data:
+            str_replace:
+              template: |
+                #!/bin/bash -v
+                # Assumption is cassandra is already installed
+                SELF_IP=$(ifconfig eth0 | grep "inet addr:" | cut -d ':' -f2 | cut -d ' ' -f1)
+                service cassandra stop
+                rm -rf /var/lib/cassandra/data/system/*
+                sed -i s/127.0.0.1/seed_ip/g /etc/cassandra/cassandra.yaml
+                sed -i s/localhost/$SELF_IP/g /etc/cassandra/cassandra.yaml
+                service cassandra start
+                echo "done" >> /tmp/status.txt
+              params:
+                seed_ip: { get_attr: [server, networks, private, 0]}
+          networks:
+            port:
+              type: OS::Neutron::Port
+              properties:
+                network_id: { get_param: net_id }
+                fixed_ips:
+                  - subnet_id: { get_param: subnet_id }
+                security_groups: [default]
+#            - port: { get_resource: server_port }
+      min_size: 1
+      desired_capacity: 3
+      max_size: 10
+
+  scale_up_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: my_asg}
+      cooldown: 60
+      scaling_adjustment: 1
+
+  scale_down_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: my_asg}
+      cooldown: 60
+      scaling_adjustment: '-1'
+
 outputs:
     server_networks:
         value: { get_attr: [server, networks] }
