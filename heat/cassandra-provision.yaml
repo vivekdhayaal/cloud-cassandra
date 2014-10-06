@@ -44,6 +44,13 @@ resources:
       user_data_format: RAW
       user_data: |
           #!/bin/bash -v
+          # Assumption is cassandra is already installed
+          SELF_IP=$(ifconfig eth0 | grep "inet addr:" | cut -d ':' -f2 | cut -d ' ' -f1)
+          service cassandra stop
+          rm -rf /var/lib/cassandra/data/system/*
+          sed -i s/127.0.0.1/$SELF_IP/g /etc/cassandra/cassandra.yaml
+          sed -i s/localhost/$SELF_IP/g /etc/cassandra/cassandra.yaml
+          service cassandra start
           echo "done" >> /tmp/status.txt
       networks:
         - port: { get_resource: server_port }
