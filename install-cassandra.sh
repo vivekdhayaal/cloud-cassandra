@@ -1,12 +1,12 @@
-!# /bin/bash
+#!/bin/bash
 set -x
 
 # TODO add check for no args
 # TODO (optional) check if arg is of type *.tar.gz
 
 TAR=$1
-tar -xzvf $1
-EXTRACT_DIR=$(ls -l | grep jre1 | grep ^d | awk '{print $NF}')
+EXTRACT_DIR=`tar tzf  $TAR | head -1 | sed -e 's@/.*@@'`
+tar -xzvf $TAR
 
 sudo mkdir -p /usr/lib/jvm
 
