@@ -20,7 +20,7 @@ echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/a
 curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
 
 sudo -E apt-get update
-sudo -E apt-get install --assume-yes dsc21 cassandra-tools
+sudo -E apt-get install --assume-yes dsc22 cassandra-tools
 
 sudo service cassandra stop
 sudo rm -rf /var/lib/cassandra/data/system/*
